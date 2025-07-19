@@ -19,6 +19,7 @@ from models import (
 from auth import create_access_token, verify_token
 from database import database, init_admin_user
 from openrouter_client import openrouter_client
+from chatgpt_agent import get_agent, cleanup_agent
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')

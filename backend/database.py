@@ -2,9 +2,15 @@ from motor.motor_asyncio import AsyncIOMotorClient
 from typing import Optional, List, Dict, Any
 import os
 from datetime import datetime
+from pathlib import Path
+from dotenv import load_dotenv
 from models import User, UserCreate, ChatSession, CreditTransaction, AgentTask
 from auth import get_password_hash, verify_password
 import logging
+
+# Load environment variables
+ROOT_DIR = Path(__file__).parent
+load_dotenv(ROOT_DIR / '.env')
 
 logger = logging.getLogger(__name__)
 

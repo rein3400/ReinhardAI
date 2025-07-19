@@ -439,6 +439,9 @@ async def startup_event():
     await init_admin_user()
     logger.info("Application started successfully!")
 
+# Global agent instances tracking
+from chatgpt_agent import agent_instances
+
 @app.on_event("shutdown")
 async def shutdown_event():
     """Cleanup on shutdown."""

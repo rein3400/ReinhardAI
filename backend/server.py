@@ -442,5 +442,9 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_event():
     """Cleanup on shutdown."""
+    # Cleanup all agent instances
+    for user_id in list(agent_instances.keys()):
+        await cleanup_agent(user_id)
+    
     await database.close()
     logger.info("Application shutdown complete.")

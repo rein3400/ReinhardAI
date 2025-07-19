@@ -247,6 +247,137 @@ async def get_agent_task(
         raise HTTPException(status_code=404, detail="Agent task not found")
     return task
 
+# ChatGPT Agent endpoints
+@api_router.post("/agents/chatgpt/tasks")
+async def create_chatgpt_task(
+    task_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Create ChatGPT Agent task with autonomous capabilities."""
+    try:
+        agent = get_agent(current_user.id, openrouter_client, database)
+        
+        task = await agent.create_task(
+            task_type=task_data.get("task_type", "general"),
+            description=task_data.get("description", ""),
+            goal=task_data.get("goal", "")
+        )
+        
+        return {"task_id": task.id, "status": task.status, "message": "ChatGPT Agent task created"}
+        
+    except Exception as e:
+        logger.error(f"ChatGPT Agent task creation error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to create agent task: {str(e)}")
+
+@api_router.post("/agents/chatgpt/tasks/{task_id}/execute")
+async def execute_chatgpt_task(
+    task_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Execute ChatGPT Agent task autonomously."""
+    try:
+        agent = get_agent(current_user.id, openrouter_client, database)
+        result = await agent.execute_task(task_id)
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"ChatGPT Agent execution error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to execute agent task: {str(e)}")
+
+@api_router.get("/agents/chatgpt/tasks/{task_id}/status")
+async def get_chatgpt_task_status(
+    task_id: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Get ChatGPT Agent task status."""
+    try:
+        agent = get_agent(current_user.id, openrouter_client, database)
+        status = await agent.get_task_status(task_id)
+        
+        return status
+        
+    except Exception as e:
+        logger.error(f"ChatGPT Agent status error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get task status: {str(e)}")
+
+@api_router.post("/agents/shell/execute")
+async def execute_shell_command(
+    command_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Execute shell command with security restrictions."""
+    try:
+        agent = get_agent(current_user.id, openrouter_client, database)
+        command = command_data.get("command", "")
+        
+        if not command:
+            raise HTTPException(status_code=400, detail="Command is required")
+        
+        result = await agent.shell_executor.execute(command)
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Shell execution error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to execute shell command: {str(e)}")
+
+@api_router.post("/agents/web/browse")
+async def browse_web(
+    browse_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Browse web and fetch content."""
+    try:
+        agent = get_agent(current_user.id, openrouter_client, database)
+        url = browse_data.get("url", "")
+        
+        if not url:
+            raise HTTPException(status_code=400, detail="URL is required")
+        
+        result = await agent.web_browser.fetch_url(url)
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Web browsing error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to browse web: {str(e)}")
+
+@api_router.post("/agents/web/search")
+async def search_web(
+    search_data: dict,
+    current_user: User = Depends(get_current_user)
+):
+    """Search web using privacy-focused search engine."""
+    try:
+        agent = get_agent(current_user.id, openrouter_client, database)
+        query = search_data.get("query", "")
+        num_results = search_data.get("num_results", 5)
+        
+        if not query:
+            raise HTTPException(status_code=400, detail="Query is required")
+        
+        results = await agent.web_browser.search_web(query, num_results)
+        
+        return {"success": True, "results": results}
+        
+    except Exception as e:
+        logger.error(f"Web search error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to search web: {str(e)}")
+
+@api_router.get("/agents/capabilities")
+async def get_agent_capabilities(current_user: User = Depends(get_current_user)):
+    """Get available agent capabilities."""
+    try:
+        agent = get_agent(current_user.id, openrouter_client, database)
+        capabilities = {name: cap.dict() for name, cap in agent.capabilities.items()}
+        
+        return {"capabilities": capabilities}
+        
+    except Exception as e:
+        logger.error(f"Agent capabilities error: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to get capabilities: {str(e)}")
+
 # Admin endpoints
 @api_router.get("/admin/users")
 async def get_all_users(current_user: User = Depends(get_current_user)):
